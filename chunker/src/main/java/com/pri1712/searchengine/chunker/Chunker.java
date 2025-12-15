@@ -46,7 +46,7 @@ public class Chunker {
     public void startChunking() throws IOException {
         ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap,chunkDataFile,chunkIndexFile);
 
-        //read from the parsed data and then chunk and store them.
+        //read from the parsed data and then chunk that data.
         try (Stream<Path> fileStream = Files.list(parsedPath).filter(f -> f.toString().endsWith(".json.gz"))) {
             fileStream.forEach(parsedFile -> {
                 try {
