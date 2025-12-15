@@ -1,6 +1,6 @@
 package com.pri1712.searchengine.wikisearchApp;
 
-import com.pri1712.searchengine.chunker.Chunker;
+//import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.indexreader.IndexData;
 import com.pri1712.searchengine.parser.Parser;
 import com.pri1712.searchengine.tokenizer.Tokenizer;
@@ -88,12 +88,12 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        try {
-            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath);
-            chunker.startChunking();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath);
+//            chunker.startChunking();
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         try {
             Tokenizer tokenizer = new Tokenizer(parsedFilePath,docStatsPath);
             LOGGER.info("Tokenizing Wikipedia XML dump file: " + parsedFilePath);

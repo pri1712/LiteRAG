@@ -40,7 +40,7 @@ public class Chunker {
                 try {
                     chunkerEngine.processFile(parsedFile);
                 } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "IO exception while reading compressed json files", e);
+                    LOGGER.log(Level.SEVERE, "Error processing file " + parsedFile.toString(), e);
                 }
             });
         }
