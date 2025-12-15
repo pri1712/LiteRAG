@@ -22,6 +22,7 @@ public class ChunkerEngine {
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     private static final Logger LOGGER = Logger.getLogger(ChunkerEngine.class.getName());
+    private int chunkId = 0;
     public ChunkerEngine(int chunkSize, int chunkOverlap, RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile) {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
@@ -69,7 +70,8 @@ public class ChunkerEngine {
             } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Error reading chunk data file pointer", e);
             }
+            chunkId++;
         }
-
+        LOGGER.log(Level.FINE, "Chunk ID {0}", chunkId);
     }
 }
