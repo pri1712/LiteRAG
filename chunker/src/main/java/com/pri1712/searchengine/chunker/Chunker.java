@@ -33,8 +33,8 @@ public class Chunker {
 
         this.chunkDataFile = new RandomAccessFile(chunkDataFilePath,"rw");
         this.chunkIndexFile = new RandomAccessFile(chunkIndexFilePath,"rw");
-        this.parsedFilePath = parsedFilePath;
 
+        this.parsedFilePath = parsedFilePath;
         parsedPath = Paths.get(parsedFilePath);
         this.chunkedFilePath = chunkedFilePath;
         BatchFileWriter  batchFileWriter = new BatchFileWriter(chunkedFilePath);
@@ -45,9 +45,6 @@ public class Chunker {
 
     public void startChunking() throws IOException {
         ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap,chunkDataFile,chunkIndexFile);
-        FileInputStream fis = new FileInputStream(parsedFilePath);
-        GZIPInputStream gis = new GZIPInputStream(fis);
-        BufferedReader br = new BufferedReader(new InputStreamReader(gis));
 
         //read from the parsed data and then chunk and store them.
         try (Stream<Path> fileStream = Files.list(parsedPath).filter(f -> f.toString().endsWith(".json.gz"))) {

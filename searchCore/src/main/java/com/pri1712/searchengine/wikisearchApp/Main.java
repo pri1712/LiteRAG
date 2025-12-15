@@ -1,6 +1,5 @@
 package com.pri1712.searchengine.wikisearchApp;
 
-//import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.indexreader.IndexData;
 import com.pri1712.searchengine.parser.Parser;
@@ -37,9 +36,11 @@ public class Main {
     static String docStatsPath = DOC_STATS_PATH;
     static String chunkedFilePath = CHUNKED_FILE_PATH;
 
-    private static int CHUNK_SIZE = 512; //in tokens
+    private static int CHUNK_SIZE = 512; //in tokens, 1 word = ~0.75 token
     private static int CHUNK_OVERLAP = 50;
-    
+    private static String chunkDataFilePath = "chunked_data.data";
+    private static String chunkIndexFilePath = "chunked_index.bin";
+
     public static void main(String[] args) throws IOException {
         long startTime = getStartTime();
         Map<String,String> parsedArgs = parseArgs(args);
@@ -92,7 +93,7 @@ public class Main {
         }
 
         try {
-            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath, chunkedFilePath);
+            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath, chunkedFilePath, chunkDataFilePath, chunkIndexFilePath );
             chunker.startChunking();
         } catch (IOException e) {
             throw new RuntimeException(e);
