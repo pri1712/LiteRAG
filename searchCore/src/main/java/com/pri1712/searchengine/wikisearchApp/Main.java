@@ -34,8 +34,8 @@ public class Main {
     static String tokenIndexOffsetPath = TOKEN_INDEX_OFFSET_PATH;
     static String docStatsPath = DOC_STATS_PATH;
 
-    private static int CHUNK_SIZE = 30;
-    private static int CHUNK_OVERLAP = 5;
+    private static int CHUNK_SIZE = 512; //in tokens
+    private static int CHUNK_OVERLAP = 50;
     
     public static void main(String[] args) throws IOException {
         long startTime = getStartTime();

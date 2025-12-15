@@ -2,16 +2,12 @@ package com.pri1712.searchengine.chunker;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.pri1712.searchengine.utils.WikiDocument;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -25,7 +21,7 @@ public class Chunker {
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     Path parsedPath;
-
+    ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap);
     public Chunker(int chunkSize, int chunkOverlap, String parsedFilePath) {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
@@ -42,7 +38,7 @@ public class Chunker {
         try (Stream<Path> fileStream = Files.list(parsedPath).filter(f -> f.toString().endsWith(".json.gz"))) {
             fileStream.forEach(parsedFile -> {
                 try {
-                    processFile(parsedFile);
+                    chunkerEngine.processFile(parsedFile);
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "IO exception while reading compressed json files", e);
                 }
