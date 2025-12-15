@@ -17,13 +17,16 @@ import java.util.zip.GZIPInputStream;
 public class ChunkerEngine {
     private int chunkSize;
     private int chunkOverlap;
-
+    private String chunkDataFile;
+    private String chunkIndexFile;
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
 
-    public ChunkerEngine(int chunkSize, int chunkOverlap) {
+    public ChunkerEngine(int chunkSize, int chunkOverlap, String chunkDataFile, String chunkIndexFile) {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
+        this.chunkDataFile = chunkDataFile;
+        this.chunkIndexFile = chunkIndexFile;
     }
 
     public void processFile(Path parsedFile) throws IOException {
@@ -36,13 +39,24 @@ public class ChunkerEngine {
             List<WikiDocument> jsonDocuments = mapper.readValue(buffRead, new TypeReference<>() {
             });
             for(WikiDocument wikiDocument : jsonDocuments) {
-                chunkText(wikiDocument.getTitle());
-                chunkText(wikiDocument.getText());
+                chunkText(wikiDocument.getTitle(), wikiDocument.getId());
+                chunkText(wikiDocument.getText(), wikiDocument.getId());
             }
         }
     }
 
-    private void chunkText(String text) {
+    private void chunkText(String text, String docId) {
+        //actual chunking happens here.
+        //how do i store chunks?????
+        String[] words = text.split("\\s+");
+        int slidingWindowSize = chunkSize - chunkOverlap;
+
+        for (int i = 0; i < words.length; i+=slidingWindowSize) {
+            int end = Math.min(words.length, i + slidingWindowSize);
+            String[] chunkWords = java.util.Arrays.copyOfRange(words, i, end);
+            String chunkText = String.join(" ", chunkWords);
+
+        }
 
     }
 }

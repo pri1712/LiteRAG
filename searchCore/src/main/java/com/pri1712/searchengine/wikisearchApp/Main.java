@@ -1,6 +1,7 @@
 package com.pri1712.searchengine.wikisearchApp;
 
 //import com.pri1712.searchengine.chunker.Chunker;
+import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.indexreader.IndexData;
 import com.pri1712.searchengine.parser.Parser;
 import com.pri1712.searchengine.tokenizer.Tokenizer;
@@ -26,6 +27,7 @@ public class Main {
     private static final String INDEXED_FILE_PATH = "data/inverted-index/";
     private static final String TOKEN_INDEX_OFFSET_PATH = "data/inverted-index/token_index_offset.json.gz";
     private static final String DOC_STATS_PATH = "data/doc-stats/";
+    private static final String CHUNKED_FILE_PATH = "data/chunked-data/";
 
     private static final String TEST_TOKEN = "aaaaamaaj";
     static String parsedFilePath = PARSED_FILE_PATH;
@@ -33,6 +35,7 @@ public class Main {
     static String indexedFilePath = INDEXED_FILE_PATH;
     static String tokenIndexOffsetPath = TOKEN_INDEX_OFFSET_PATH;
     static String docStatsPath = DOC_STATS_PATH;
+    static String chunkedFilePath = CHUNKED_FILE_PATH;
 
     private static int CHUNK_SIZE = 512; //in tokens
     private static int CHUNK_OVERLAP = 50;
@@ -88,12 +91,12 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-//        try {
-//            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath);
-//            chunker.startChunking();
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
+        try {
+            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath, chunkedFilePath);
+            chunker.startChunking();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         try {
             Tokenizer tokenizer = new Tokenizer(parsedFilePath,docStatsPath);
             LOGGER.info("Tokenizing Wikipedia XML dump file: " + parsedFilePath);

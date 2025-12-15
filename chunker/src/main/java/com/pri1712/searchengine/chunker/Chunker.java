@@ -3,6 +3,7 @@ package com.pri1712.searchengine.chunker;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pri1712.searchengine.utils.BatchFileWriter;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -17,19 +18,33 @@ public class Chunker {
     private static final Logger LOGGER = Logger.getLogger(Chunker.class.getName());
     private int chunkSize;
     private int chunkOverlap;
-    String parsedFilePath;
+    private String parsedFilePath;
+    private String chunkedFilePath;
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     Path parsedPath;
-    ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap);
-    public Chunker(int chunkSize, int chunkOverlap, String parsedFilePath) {
+
+    private RandomAccessFile chunkDataFile;
+    private RandomAccessFile chunkIndexFile;
+
+    public Chunker(int chunkSize, int chunkOverlap, String parsedFilePath, String chunkedFilePath, String chunkDataFilePath, String chunkIndexFilePath) throws IOException {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
+
+        this.chunkDataFile = new RandomAccessFile(chunkDataFilePath,"rw");
+        this.chunkIndexFile = new RandomAccessFile(chunkIndexFilePath,"rw");
         this.parsedFilePath = parsedFilePath;
+
         parsedPath = Paths.get(parsedFilePath);
+        this.chunkedFilePath = chunkedFilePath;
+        BatchFileWriter  batchFileWriter = new BatchFileWriter(chunkedFilePath);
+
+        chunkDataFile.seek(chunkDataFile.length());
+        chunkIndexFile.seek(chunkIndexFile.length());
     }
 
     public void startChunking() throws IOException {
+        ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap,chunkDataFile,chunkIndexFile);
         FileInputStream fis = new FileInputStream(parsedFilePath);
         GZIPInputStream gis = new GZIPInputStream(fis);
         BufferedReader br = new BufferedReader(new InputStreamReader(gis));
@@ -44,8 +59,6 @@ public class Chunker {
                 }
             });
         }
-
-
     }
 
     public int getChunkOverlap() {
