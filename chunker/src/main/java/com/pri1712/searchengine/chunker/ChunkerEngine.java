@@ -33,7 +33,7 @@ public class ChunkerEngine {
     Tokenizer tokenizer = new Tokenizer();
     IndexWriter indexWriter = new IndexWriter();
 
-    public ChunkerEngine(int chunkSize, int chunkOverlap, RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile) {
+    public ChunkerEngine(int chunkSize, int chunkOverlap, RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile) throws IOException {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
         this.chunkDataFile = chunkDataFile;

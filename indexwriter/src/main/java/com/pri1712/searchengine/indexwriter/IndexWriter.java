@@ -50,7 +50,7 @@ public class IndexWriter {
         this.batchFileWriter = new BatchFileWriter(indexedFilePath);
     }
 
-    public IndexWriter() {}
+    public IndexWriter() throws IOException {}
 
     public void indexData(String filePath) throws IOException {
         Path tokenizedPath = Paths.get(filePath);
@@ -224,7 +224,11 @@ public class IndexWriter {
     }
 
     private void addToIndex(TokenizedChunk tokenizedChunk) throws Exception {
-        addChunk(tokenizedChunk);
+        try {
+            addChunk(tokenizedChunk);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,"Failed to add tokenized chunk to disk",e);
+        }
     }
 
     private void addDocument(TokenizedData doc) {
