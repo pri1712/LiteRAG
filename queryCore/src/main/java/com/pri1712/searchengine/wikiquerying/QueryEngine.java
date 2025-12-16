@@ -58,18 +58,16 @@ public class QueryEngine {
         //returns a list of {chunkId,frequencies,token} objects.
         List<IndexData> queryIndexData = indexReader.readTokenIndex(tokens);
         //from the chunkID now we have to access the chunk metadata to get to the actual chunk.
-        String firstToken = queryIndexData.get(0).getToken();
-        List<Integer> firstChunkIDList = queryIndexData.get(0).getIds();
-        List<Integer> firstFreqList = queryIndexData.get(0).getFreqs();
-        LOGGER.fine("First Token: " + firstToken);
-        LOGGER.fine("First Chunk ID: " + firstChunkIDList);
-        LOGGER.fine("First Freq: " + firstFreqList);
-        try {
-            getChunk(firstToken,firstChunkIDList,firstFreqList);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE,e.getMessage(),e);
+        for (IndexData indexData : queryIndexData) {
+            List<Integer> chunkIDList = indexData.getIds();
+            List<Integer> freqList = indexData.getFreqs();
+            String token = indexData.getToken();
+            try {
+                getChunk(token,chunkIDList,freqList);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE,e.getMessage(),e);
+            }
         }
-
     }
 
     public List<String> preprocessQuery(String line) throws IOException {
@@ -77,9 +75,9 @@ public class QueryEngine {
         return TextUtils.tokenizeQuery(tokens);
     }
 
-    private void getChunk(String token,List<Integer> firstChunkIDList,List<Integer> firstFreqList) throws IOException {
+    private void getChunk(String token,List<Integer> chunkIDList,List<Integer> freqList) throws IOException {
         try {
-            List<ChunkMetaData> chunkMetadata = getChunkMetadata(firstChunkIDList);
+            List<ChunkMetaData> chunkMetadata = getChunkMetadata(chunkIDList);
             List<String> chunks = getChunkData(chunkMetadata);
             LOGGER.fine("chunkMetadata data offset: " + chunkMetadata.get(0).getDataOffset());
             LOGGER.fine("chunkMetadata data length: " + chunkMetadata.get(0).getDataLength());
@@ -89,12 +87,11 @@ public class QueryEngine {
         }
     }
 
-    private List<ChunkMetaData> getChunkMetadata(List<Integer> chunkIdList) throws IOException {
+    private List<ChunkMetaData> getChunkMetadata(List<Integer> chunkIDList) throws IOException {
         //read the chunk_index.bin file, get the length, and offset in the data file
         List<ChunkMetaData> chunkMetaData = new ArrayList<>();
-        for (int i = 0; i < min(TOP_K,chunkIdList.size()) ; i++) {
+        for (int currentChunkID : chunkIDList) {
             //get the details for the top k in the chunk ID list.
-            int currentChunkID = chunkIdList.get(i);
             long positionInIndex = (long) currentChunkID * RECORD_SIZE;
             if (positionInIndex >= chunkIndexFile.length()) {
                 LOGGER.warning("Unable to access the metadata in the chunk index due to mismatch in sizing");
@@ -105,11 +102,22 @@ public class QueryEngine {
             int dataLength = chunkIndexFile.readInt();
             int docId = chunkIndexFile.readInt();
             int tokenCount = chunkIndexFile.readInt();
-            chunkMetaData.add(new ChunkMetaData(dataOffset,dataLength,docId,tokenCount));
+            chunkMetaData.add(new ChunkMetaData(dataOffset, dataLength, docId, tokenCount));
         }
-        return chunkMetaData;
+        List<ChunkMetaData> filteredChunkMetaData = rankBM25(chunkMetaData);
+        return filteredChunkMetaData;
     }
 
+    private List<ChunkMetaData> rankBM25(List<ChunkMetaData> chunkMetaData) {
+        List<ChunkMetaData> filteredChunkMetaData = new ArrayList<>();
+        for (ChunkMetaData data : chunkMetaData) {
+            //score each of the entries in the chunkmetadata list.
+            int tokenFrequency =
+            scoreChunks(data,)
+        }
+    }
+
+    private
     private List<String> getChunkData(List<ChunkMetaData> chunkMetaData) throws IOException {
         List<String> chunks = new ArrayList<>();
         for (ChunkMetaData chunkMetaDataData : chunkMetaData) {
