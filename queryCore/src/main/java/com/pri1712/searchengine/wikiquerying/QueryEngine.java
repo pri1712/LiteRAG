@@ -78,6 +78,7 @@ public class QueryEngine {
         List<ChunkMetaData> chunkMetaData = new ArrayList<>();
         for (int i = 0; i < TOP_K; i++) {
             //get the details for the top k in the chunk ID list.
+            int currentChunkID = chunkIdList.get(i);
 
         }
         return chunkMetaData;
