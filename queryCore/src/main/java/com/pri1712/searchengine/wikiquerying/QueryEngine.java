@@ -76,6 +76,9 @@ public class QueryEngine {
     private void getChunk(String token,List<Integer> firstChunkIDList,List<Integer> firstFreqList) throws IOException {
         try {
             List<ChunkMetaData> chunkMetadata = getChunkMetadata(firstChunkIDList);
+
+            LOGGER.fine("chunkMetadata data offset: " + chunkMetadata.get(0).getDataOffset());
+            LOGGER.fine("chunkMetadata data length: " + chunkMetadata.get(0).getDataLength());
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE,e.getMessage(),e);
         }
