@@ -4,11 +4,12 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.pri1712.searchengine.indexwriter.IndexWriter;
 import com.pri1712.searchengine.model.TokenizedChunk;
 import com.pri1712.searchengine.model.data.Chunk;
 import com.pri1712.searchengine.utils.WikiDocument;
 import com.pri1712.searchengine.tokenizer.Tokenizer;
-import com.pri1712.searchengine.indexreader.IndexReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +31,8 @@ public class ChunkerEngine {
     private int chunkId = 0;
 
     Tokenizer tokenizer = new Tokenizer();
-    IndexReader indexReader = new IndexReader();
+    IndexWriter indexWriter = new IndexWriter();
+
     public ChunkerEngine(int chunkSize, int chunkOverlap, RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile) {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
@@ -67,7 +69,7 @@ public class ChunkerEngine {
             long chunkBytesLength = chunkBytes.length;
             try {
                 TokenizedChunk tokenizedChunk = tokenizer.tokenizeChunk(new Chunk(chunkId,chunkText));
-
+                indexWriter.indexChunks(tokenizedChunk);
             } catch (Exception ex) {
                 LOGGER.log(Level.WARNING, ex.getMessage(), ex);
             }

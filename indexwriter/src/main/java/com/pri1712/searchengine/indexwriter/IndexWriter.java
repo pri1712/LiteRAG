@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.pri1712.searchengine.indexwriter.compression.IndexCompression;
+import com.pri1712.searchengine.model.TokenizedChunk;
 import com.pri1712.searchengine.utils.BatchFileWriter;
 import com.pri1712.searchengine.model.TokenizedData;
 
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.security.spec.ECField;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
@@ -48,6 +50,8 @@ public class IndexWriter {
         this.batchFileWriter = new BatchFileWriter(indexedFilePath);
     }
 
+    public IndexWriter() {}
+
     public void indexData(String filePath) throws IOException {
         Path tokenizedPath = Paths.get(filePath);
         try (Stream<Path> fileStream = Files.list(tokenizedPath).filter(f -> f.toString().endsWith(".json.gz"))) {
@@ -64,6 +68,13 @@ public class IndexWriter {
         }
     }
 
+    public void indexChunks(TokenizedChunk tokenizedChunk) throws IOException {
+        try {
+            addToIndex(tokenizedChunk);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error indexing chunks", e);
+        }
+    }
     //merge all the created inverted indexes.
     public void mergeAllIndexes(String indexFilePath) throws IOException {
         Path indexedPath = Paths.get(indexFilePath);
@@ -207,9 +218,13 @@ public class IndexWriter {
 
             }
 
-        } catch (IOException e) {
+        } catch (IOException e ) {
             LOGGER.log(Level.SEVERE, "Failed to read file: " + file.toString(), e);
         }
+    }
+
+    private void addToIndex(TokenizedChunk tokenizedChunk) throws Exception {
+        addChunk(tokenizedChunk);
     }
 
     private void addDocument(TokenizedData doc) {
@@ -228,6 +243,16 @@ public class IndexWriter {
                     .merge(Integer.parseInt(id), 1, Integer::sum);
         }
 
+    }
+
+    private void addChunk(TokenizedChunk tokenizedChunk) {
+        List<String> chunkText = tokenizedChunk.getTokenizedText();
+        String chunkId = tokenizedChunk.getChunkId();
+        for (String token : chunkText) {
+            invertedIndex
+                    .computeIfAbsent(token, k -> new HashMap<>())
+                    .merge(Integer.parseInt(chunkId), 1, Integer::sum);
+        }
     }
 
     private boolean shouldFlush() {

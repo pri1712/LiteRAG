@@ -47,6 +47,7 @@ public class IndexReader {
     }
 
     public IndexReader() {}
+
     private void loadTokenMapInMemory(String indexTokenOffsetFilePath) throws IOException {
         FileInputStream fis = new FileInputStream(indexTokenOffsetFilePath.toString());
         GZIPInputStream gis = new GZIPInputStream(fis);
