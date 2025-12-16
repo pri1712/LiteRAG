@@ -22,6 +22,8 @@ public class Main {
     private static final String DOC_STATS_PATH = "data/doc-stats/";
     private static final String CHUNKED_FILE_PATH = "data/chunked-data/";
 
+    private static final int TOP_K = 1;
+
     private static final String TEST_TOKEN = "aaaaamaaj";
     static String parsedFilePath = PARSED_FILE_PATH;
     static String tokenizedFilePath = TOKENIZED_FILE_PATH;
@@ -103,8 +105,6 @@ public class Main {
 //        }
         try {
             IndexWriter indexWriter = new IndexWriter(indexedFilePath);
-//            LOGGER.info("Indexing Wikipedia XML dump file: " + tokenizedFilePath);
-//            indexWriter.indexData(tokenizedFilePath);
             indexWriter.mergeAllIndexes(indexedFilePath);
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
@@ -135,7 +135,7 @@ public class Main {
                     continue;
                 }
                 try {
-                    QueryEngine queryEngine = new QueryEngine(indexedFilePath,docStatsPath,tokenIndexOffsetPath);
+                    QueryEngine queryEngine = new QueryEngine(indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath);
                     queryEngine.start(line);
 
                 } catch (IOException e) {
