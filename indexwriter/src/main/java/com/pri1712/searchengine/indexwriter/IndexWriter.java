@@ -12,6 +12,7 @@ import com.pri1712.searchengine.model.TokenizedData;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +51,7 @@ public class IndexWriter {
         this.batchFileWriter = new BatchFileWriter(indexedFilePath);
     }
 
-    public IndexWriter() {}
+    public IndexWriter() throws IOException {}
 
     public void indexData(String filePath) throws IOException {
         Path tokenizedPath = Paths.get(filePath);
@@ -75,10 +76,11 @@ public class IndexWriter {
             LOGGER.log(Level.SEVERE, "Error indexing chunks", e);
         }
     }
+
     //merge all the created inverted indexes.
     public void mergeAllIndexes(String indexFilePath) throws IOException {
         Path indexedPath = Paths.get(indexFilePath);
-        Path tokenIndexOutputPath = indexedPath.resolve(String.format("token_index_offset.json.gz"));
+//        Path tokenIndexOutputPath = indexedPath.resolve(String.format("token_index_offset.json.gz"));
 
         int indexRound = 0;
         List<Path> indexFiles = Files.list(indexedPath)
@@ -108,10 +110,29 @@ public class IndexWriter {
         }
         LOGGER.info("Indexed all data.");
         //delta encoding on final inverted index.
-        compressor.deltaEncode(indexFiles.get(0),tokenIndexOutputPath);
-
+        compressor.deltaEncode(indexFiles.get(0));
+        try {
+            deleteOriginalIndex(indexFilePath);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to delete original index due to IO exception", e);
+        }
     }
 
+    private void deleteOriginalIndex(String indexPath) throws IOException {
+        try (DirectoryStream<Path> stream =
+                     Files.newDirectoryStream(Paths.get(indexPath), "*.json.gz")) {
+
+            for (Path gzFile : stream) {
+                Path deltaFile = Paths.get(
+                        gzFile.toString().replace(".json.gz", "_delta_encoded.json")
+                );
+
+                if (Files.exists(deltaFile)) {
+                    Files.delete(gzFile);
+                }
+            }
+        }
+    }
     private void mergeBatch(List<Path> batch, Path outputIndexPath) throws IOException {
         //actual file merging logic.
         long byteOffset = 0;
@@ -207,7 +228,7 @@ public class IndexWriter {
                 addDocument(document);
                 long preUsedMemory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024); //used mem in MB
                 if (shouldFlush()) {
-                    LOGGER.info("Flushing to disk");
+                    LOGGER.fine("Flushing to disk");
                     batchFileWriter.writeIndex(invertedIndex,indexFileCounter);
                     invertedIndex.clear();
                     indexFileCounter++;
@@ -224,7 +245,18 @@ public class IndexWriter {
     }
 
     private void addToIndex(TokenizedChunk tokenizedChunk) throws Exception {
-        addChunk(tokenizedChunk);
+        try {
+            LOGGER.fine("tokenize chunk text: " + tokenizedChunk.getTokenizedText());
+            addChunk(tokenizedChunk);
+            if (shouldFlush()) {
+                LOGGER.fine("Flushing to disk");
+                batchFileWriter.writeChunk(invertedIndex,indexFileCounter);
+                invertedIndex.clear();
+                indexFileCounter++;
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,"Failed to add tokenized chunk to disk",e);
+        }
     }
 
     private void addDocument(TokenizedData doc) {
@@ -242,12 +274,12 @@ public class IndexWriter {
                     .computeIfAbsent(token, k -> new HashMap<>())
                     .merge(Integer.parseInt(id), 1, Integer::sum);
         }
-
     }
 
     private void addChunk(TokenizedChunk tokenizedChunk) {
         List<String> chunkText = tokenizedChunk.getTokenizedText();
         String chunkId = tokenizedChunk.getChunkId();
+        //in chunks the title and text is all treated as a chunk itself, there is no distinction while tokenizing it.
         for (String token : chunkText) {
             invertedIndex
                     .computeIfAbsent(token, k -> new HashMap<>())
