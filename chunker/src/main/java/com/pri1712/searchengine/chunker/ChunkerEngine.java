@@ -125,7 +125,7 @@ public class ChunkerEngine {
         mapper.writeValue(statsFile, stats);
         indexWriter.close();
 
-        LOGGER.log(Level.INFO, "Indexing finished. Total Chunks: {0}, Avg Length: {1}",
+        LOGGER.log(Level.FINE, "Indexing finished. Total Chunks: {0}, Avg Length: {1}",
                 new Object[]{totalChunks, averageChunkSize});
     }
 }
