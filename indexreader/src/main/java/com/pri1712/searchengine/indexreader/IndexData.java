@@ -12,7 +12,7 @@ public class IndexData {
         this.token = token;
     }
 
-    public List<Integer> getDocIds() {
+    public List<Integer> getIds() {
         return docIds;
     }
 

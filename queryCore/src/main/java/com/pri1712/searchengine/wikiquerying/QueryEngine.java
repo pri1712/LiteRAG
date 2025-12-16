@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class QueryEngine {
@@ -19,12 +20,15 @@ public class QueryEngine {
     private String tokenIndexOffset;
     private IndexReader indexReader;
     private Path indexedFilePath;
-    public QueryEngine(String invertedIndex, String docStats, String tokenIndexOffset) throws IOException {
+    private int TOP_K;
+
+    public QueryEngine(String invertedIndex, String docStats, String tokenIndexOffset, int TOP_K) throws IOException {
         this.invertedIndex = invertedIndex;
         this.docStats = docStats;
         this.tokenIndexOffset = tokenIndexOffset;
-        Path directory = Paths.get(invertedIndex);
-        this.indexedFilePath = Files.list(directory)
+        this.TOP_K = TOP_K;
+        Path indexDirectory = Paths.get(invertedIndex);
+        this.indexedFilePath = Files.list(indexDirectory)
                 .filter(p -> p.getFileName().toString().endsWith("_delta_encoded.json"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("no inverted index found"));
@@ -34,12 +38,30 @@ public class QueryEngine {
         //tokenize and normalize the query
         List<String> tokens = preprocessQuery(line);
         this.indexReader = new IndexReader(invertedIndex,tokenIndexOffset);
+        //returns a list of {chunkId,frequencies,token} objects.
         List<IndexData> queryIndexData = indexReader.readTokenIndex(tokens);
+        //from the chunkID now we have to access the chunk metadata to get to the actual chunk.
+        String firstToken = queryIndexData.get(0).getToken();
+        List<Integer> firstChunkIDList = queryIndexData.get(0).getIds();
+        List<Integer> firstFreqList = queryIndexData.get(0).getFreqs();
+        LOGGER.fine("First Token: " + firstToken);
+        LOGGER.fine("First Chunk ID: " + firstChunkIDList);
+        LOGGER.fine("First Freq: " + firstFreqList);
+        try {
+            getChunk(firstToken,firstChunkIDList,firstFreqList);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE,e.getMessage(),e);
+        }
+
         //now we have the doc IDs and freq of the token in eaach of those,how do we do IR now?
     }
 
     public List<String> preprocessQuery(String line) throws IOException {
         List<String> tokens = Arrays.asList(line.split(" "));
         return TextUtils.tokenizeQuery(tokens);
+    }
+
+    private void getChunk(String token,List<Integer> firstChunkIDList,List<Integer> firstFreqList) throws IOException {
+
     }
 }
