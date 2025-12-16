@@ -292,4 +292,6 @@ public class IndexWriter {
         return invertedIndex.size() >= MAX_IN_MEMORY_LENGTH; //very rudimentary check, use heap size later
     }
 
+    public void close() {
+    }
 }

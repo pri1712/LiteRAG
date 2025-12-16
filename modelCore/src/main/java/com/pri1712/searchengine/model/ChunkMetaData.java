@@ -4,10 +4,12 @@ public class ChunkMetaData {
     private long dataOffset;
     private int dataLength;
     private int docId;
-    public ChunkMetaData(long dataOffset, int dataLength, int docId) {
+    private int tokenCount;
+    public ChunkMetaData(long dataOffset, int dataLength, int docId, int tokenCount) {
         this.dataOffset = dataOffset;
         this.dataLength = dataLength;
         this.docId = docId;
+        this.tokenCount = tokenCount;
     }
 
     public long getDataOffset() {
@@ -20,5 +22,9 @@ public class ChunkMetaData {
 
     public int getDocId() {
         return docId;
+    }
+
+    public int getTokenCount() {
+        return tokenCount;
     }
 }

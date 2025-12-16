@@ -3,6 +3,7 @@ package com.pri1712.searchengine.chunker;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pri1712.searchengine.model.ChunkConfiguration;
 import com.pri1712.searchengine.utils.BatchFileWriter;
 
 import java.io.*;
@@ -19,6 +20,8 @@ public class Chunker {
     private int chunkOverlap;
     private String chunkedFilePath;
     private String indexedFilePath;
+    private String docStatsPath;
+
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     Path parsedPath;
@@ -26,12 +29,13 @@ public class Chunker {
     private RandomAccessFile chunkDataFile;
     private RandomAccessFile chunkIndexFile;
 
-    public Chunker(int chunkSize, int chunkOverlap, String parsedFilePath, String chunkedFilePath, String chunkDataFilePath, String chunkIndexFilePath, String indexedFilePath) throws IOException {
+    public Chunker(int chunkSize, int chunkOverlap, String parsedFilePath, String chunkedFilePath, String chunkDataFilePath, String chunkIndexFilePath, String indexedFilePath, String docStatsPath) throws IOException {
         this.chunkSize = chunkSize;
         this.chunkOverlap = chunkOverlap;
         parsedPath = Paths.get(parsedFilePath);
         this.chunkedFilePath = chunkedFilePath;
         this.indexedFilePath = indexedFilePath;
+        this.docStatsPath = docStatsPath;
 
         BatchFileWriter  batchFileWriter = new BatchFileWriter(chunkedFilePath);
 
@@ -43,13 +47,13 @@ public class Chunker {
     }
 
     public void startChunking() throws IOException {
-        ChunkerEngine chunkerEngine = new ChunkerEngine(chunkSize, chunkOverlap,chunkDataFile,chunkIndexFile,indexedFilePath);
-
+        ChunkerEngine chunkerEngine = new ChunkerEngine(new ChunkConfiguration(chunkSize,chunkOverlap),chunkDataFile,chunkIndexFile,indexedFilePath,docStatsPath);
         //read from the parsed data and then chunk that data.
         try (Stream<Path> fileStream = Files.list(parsedPath).filter(f -> f.toString().endsWith(".json.gz"))) {
             fileStream.forEach(parsedFile -> {
                 try {
                     chunkerEngine.processFile(parsedFile);
+                    chunkerEngine.finish();
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Error processing file " + parsedFile.toString(), e);
                 }
