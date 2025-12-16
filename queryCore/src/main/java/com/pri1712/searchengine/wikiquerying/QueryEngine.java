@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -66,16 +67,19 @@ public class QueryEngine {
 
     private void getChunk(String token,List<Integer> firstChunkIDList,List<Integer> firstFreqList) throws IOException {
         try {
-            ChunkMetaData chunkMetadata = getChunkMetadata(firstChunkIDList);
+            List<ChunkMetaData> chunkMetadata = getChunkMetadata(firstChunkIDList);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE,e.getMessage(),e);
         }
     }
 
-    private ChunkMetaData getChunkMetadata(List<Integer> chunkIdList) throws IOException {
+    private List<ChunkMetaData> getChunkMetadata(List<Integer> chunkIdList) throws IOException {
         //read the chunk_index.bin file, get the length, and offset in the data file
-        for (int currentChunkID : chunkIdList) {
+        List<ChunkMetaData> chunkMetaData = new ArrayList<>();
+        for (int i = 0; i < TOP_K; i++) {
+            //get the details for the top k in the chunk ID list.
 
         }
+        return chunkMetaData;
     }
 }
