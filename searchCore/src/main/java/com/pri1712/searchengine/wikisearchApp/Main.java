@@ -23,7 +23,7 @@ public class Main {
     private static final String CHUNKED_FILE_PATH = "data/chunked-data/";
 
     private static final int TOP_K = 1;
-
+    private static final int RECORD_SIZE = 16;
     private static final String TEST_TOKEN = "aaaaamaaj";
     static String parsedFilePath = PARSED_FILE_PATH;
     static String tokenizedFilePath = TOKENIZED_FILE_PATH;
@@ -135,7 +135,7 @@ public class Main {
                     continue;
                 }
                 try {
-                    QueryEngine queryEngine = new QueryEngine(indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath);
+                    QueryEngine queryEngine = new QueryEngine(indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath, RECORD_SIZE);
                     queryEngine.start(line);
 
                 } catch (IOException e) {
