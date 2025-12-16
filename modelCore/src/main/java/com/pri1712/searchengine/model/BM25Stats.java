@@ -12,4 +12,27 @@ public class BM25Stats {
         this.averageChunkSize = averageChunkSize;
     }
 
+    public long getAverageChunkSize() {
+        return averageChunkSize;
+    }
+
+    public void setAverageChunkSize(long averageChunkSize) {
+        this.averageChunkSize = averageChunkSize;
+    }
+
+    public long getTotalTokens() {
+        return totalTokens;
+    }
+
+    public void setTotalTokens(long totalTokens) {
+        this.totalTokens = totalTokens;
+    }
+
+    public long getTotalChunks() {
+        return totalChunks;
+    }
+
+    public void setTotalChunks(long totalChunks) {
+        this.totalChunks = totalChunks;
+    }
 }

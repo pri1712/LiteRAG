@@ -104,7 +104,8 @@ public class QueryEngine {
             long dataOffset = chunkIndexFile.readLong();
             int dataLength = chunkIndexFile.readInt();
             int docId = chunkIndexFile.readInt();
-            chunkMetaData.add(new ChunkMetaData(dataOffset,dataLength,docId));
+            int tokenCount = chunkIndexFile.readInt();
+            chunkMetaData.add(new ChunkMetaData(dataOffset,dataLength,docId,tokenCount));
         }
         return chunkMetaData;
     }
