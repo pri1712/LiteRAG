@@ -1,13 +1,16 @@
 package com.pri1712.searchengine.wikiquerying;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pri1712.searchengine.indexreader.IndexData;
+import com.pri1712.searchengine.model.BM25Stats;
 import com.pri1712.searchengine.utils.TextUtils;
 import com.pri1712.searchengine.indexreader.IndexReader;
 import com.pri1712.searchengine.model.ChunkMetaData;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,17 +25,18 @@ import static java.lang.Math.min;
 
 public class QueryEngine {
     private static final Logger LOGGER = Logger.getLogger(String.valueOf(QueryEngine.class));
+    ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+            .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
     private String invertedIndex;
     private String docStats;
     private String tokenIndexOffset;
     private IndexReader indexReader;
     private Path indexedFilePath;
     private final int TOP_K;
-    private String chunkDataFilePath;
-    private String chunkIndexFilePath;
     private final int RECORD_SIZE;
     private final RandomAccessFile chunkIndexFile;
     private final RandomAccessFile chunkDataFile;
+    private BM25Stats stats;
 
     public QueryEngine(String invertedIndex, String docStats, String tokenIndexOffset, int TOP_K, String chunkDataFilePath, String chunkIndexFilePath, int RECORD_SIZE) throws IOException {
         this.invertedIndex = invertedIndex;
@@ -44,8 +48,6 @@ public class QueryEngine {
                 .filter(p -> p.getFileName().toString().endsWith("_delta_encoded.json"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("no inverted index found"));
-        this.chunkDataFilePath = chunkDataFilePath;
-        this.chunkIndexFilePath = chunkIndexFilePath;
         this.RECORD_SIZE = RECORD_SIZE;
         this.chunkIndexFile = new RandomAccessFile(chunkIndexFilePath, "r");
         this.chunkDataFile = new RandomAccessFile(chunkDataFilePath, "r");
@@ -53,6 +55,13 @@ public class QueryEngine {
 
     public void start(String line) throws IOException {
         //tokenize and normalize the query
+        try {
+            initParams();
+        } catch (FileNotFoundException e) {
+            LOGGER.log(Level.WARNING, "File not found", e);
+        } catch (JsonProcessingException e) {
+            LOGGER.warning("Json processing exception in QueryEngine");
+        }
         List<String> tokens = preprocessQuery(line);
         this.indexReader = new IndexReader(invertedIndex,tokenIndexOffset);
         //returns a list of {chunkId,frequencies,token} objects.
@@ -70,6 +79,14 @@ public class QueryEngine {
         }
     }
 
+    private void initParams() throws FileNotFoundException, JsonProcessingException {
+        File file = new File(docStats);
+        if (!file.exists()) {
+            LOGGER.log(Level.WARNING, "docStats file does not exist");
+            throw new FileNotFoundException("docStats file does not exist");
+        }
+        this.stats = mapper.readValue(docStats,BM25Stats.class);
+    }
     public List<String> preprocessQuery(String line) throws IOException {
         List<String> tokens = Arrays.asList(line.split(" "));
         return TextUtils.tokenizeQuery(tokens);
@@ -77,7 +94,7 @@ public class QueryEngine {
 
     private void getChunk(String token,List<Integer> chunkIDList,List<Integer> freqList) throws IOException {
         try {
-            List<ChunkMetaData> chunkMetadata = getChunkMetadata(chunkIDList);
+            List<ChunkMetaData> chunkMetadata = getChunkMetadata(chunkIDList, freqList);
             List<String> chunks = getChunkData(chunkMetadata);
             LOGGER.fine("chunkMetadata data offset: " + chunkMetadata.get(0).getDataOffset());
             LOGGER.fine("chunkMetadata data length: " + chunkMetadata.get(0).getDataLength());
@@ -87,7 +104,14 @@ public class QueryEngine {
         }
     }
 
-    private List<ChunkMetaData> getChunkMetadata(List<Integer> chunkIDList) throws IOException {
+    /***
+     *
+     * @param chunkIDList
+     * @param freqList
+     * @return a list of chunk Metadata objects for all the chunkIDs in the param chunkIDList.
+     * @throws IOException
+     */
+    private List<ChunkMetaData> getChunkMetadata(List<Integer> chunkIDList,List<Integer> freqList) throws IOException {
         //read the chunk_index.bin file, get the length, and offset in the data file
         List<ChunkMetaData> chunkMetaData = new ArrayList<>();
         for (int currentChunkID : chunkIDList) {
@@ -104,20 +128,24 @@ public class QueryEngine {
             int tokenCount = chunkIndexFile.readInt();
             chunkMetaData.add(new ChunkMetaData(dataOffset, dataLength, docId, tokenCount));
         }
-        List<ChunkMetaData> filteredChunkMetaData = rankBM25(chunkMetaData);
+        List<ChunkMetaData> filteredChunkMetaData = rankBM25(chunkMetaData,freqList,chunkIDList);
         return filteredChunkMetaData;
     }
 
-    private List<ChunkMetaData> rankBM25(List<ChunkMetaData> chunkMetaData) {
+    private List<ChunkMetaData> rankBM25(List<ChunkMetaData> chunkMetaData,List<Integer> freqList,List<Integer> chunkIDList) {
         List<ChunkMetaData> filteredChunkMetaData = new ArrayList<>();
-        for (ChunkMetaData data : chunkMetaData) {
+        for (int i =0;i<chunkMetaData.size();i++) {
             //score each of the entries in the chunkmetadata list.
-            int tokenFrequency =
-            scoreChunks(data,)
+            int tokenFrequency = freqList.get(i);
+            long totalTokenCount = stats.getTotalTokens();
+            long totalChunkCount = stats.getTotalChunks();
+            int postListSize = chunkIDList.size();
+            long averageTokenCount = stats.
+            ScoredChunk scoredChunk = scoreChunks(data, tokenFrequency, )
         }
     }
 
-    private
+    private ScoredChunk scoreChunks()
     private List<String> getChunkData(List<ChunkMetaData> chunkMetaData) throws IOException {
         List<String> chunks = new ArrayList<>();
         for (ChunkMetaData chunkMetaDataData : chunkMetaData) {
