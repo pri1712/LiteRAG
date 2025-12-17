@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pri1712.searchengine.indexreader.IndexData;
 import com.pri1712.searchengine.model.BM25Stats;
+import com.pri1712.searchengine.model.ScoredChunk;
 import com.pri1712.searchengine.utils.TextUtils;
 import com.pri1712.searchengine.indexreader.IndexReader;
 import com.pri1712.searchengine.model.ChunkMetaData;
@@ -128,24 +129,31 @@ public class QueryEngine {
             int tokenCount = chunkIndexFile.readInt();
             chunkMetaData.add(new ChunkMetaData(dataOffset, dataLength, docId, tokenCount));
         }
-        List<ChunkMetaData> filteredChunkMetaData = rankBM25(chunkMetaData,freqList,chunkIDList);
+        List<ScoredChunk> scoredChunkList = rankBM25(chunkMetaData,freqList,chunkIDList);
+        List<ChunkMetaData> filteredChunkMetaData = new ArrayList<>();
         return filteredChunkMetaData;
     }
 
-    private List<ChunkMetaData> rankBM25(List<ChunkMetaData> chunkMetaData,List<Integer> freqList,List<Integer> chunkIDList) {
-        List<ChunkMetaData> filteredChunkMetaData = new ArrayList<>();
+    private List<ScoredChunk> rankBM25(List<ChunkMetaData> chunkMetaData,List<Integer> freqList,List<Integer> chunkIDList) {
+        List<ScoredChunk> scoredChunkList = new ArrayList<>();
         for (int i =0;i<chunkMetaData.size();i++) {
             //score each of the entries in the chunkmetadata list.
             int tokenFrequency = freqList.get(i);
             long totalTokenCount = stats.getTotalTokens();
             long totalChunkCount = stats.getTotalChunks();
             int postListSize = chunkIDList.size();
-            long averageTokenCount = stats.
-            ScoredChunk scoredChunk = scoreChunks(data, tokenFrequency, )
+            long averageChunkSize = stats.getAverageChunkSize();
+            ChunkMetaData data = chunkMetaData.get(i);
+            ScoredChunk scoredChunk = scoreChunks(data,tokenFrequency, totalTokenCount, totalChunkCount, postListSize, averageChunkSize);
+            scoredChunkList.add(scoredChunk);
         }
+        return scoredChunkList;
     }
 
-    private ScoredChunk scoreChunks()
+
+    private ScoredChunk scoreChunks(ChunkMetaData data,int tokenFrequency, long totalTokenCount, long totalChunkCount, int postingListSize, long averageChunkSize) {
+
+    }
     private List<String> getChunkData(List<ChunkMetaData> chunkMetaData) throws IOException {
         List<String> chunks = new ArrayList<>();
         for (ChunkMetaData chunkMetaDataData : chunkMetaData) {
