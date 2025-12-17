@@ -14,7 +14,7 @@ public class ScoredChunk {
         return chunkMetaData;
     }
 
-    public String getChunkId() {
+    public int getChunkId() {
         return chunkId;
     }
 
