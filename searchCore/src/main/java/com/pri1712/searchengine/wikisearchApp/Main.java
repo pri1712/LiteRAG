@@ -2,6 +2,8 @@ package com.pri1712.searchengine.wikisearchApp;
 
 import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.indexwriter.IndexWriter;
+import com.pri1712.searchengine.model.params.ChunkParams;
+import com.pri1712.searchengine.model.params.RankingParams;
 import com.pri1712.searchengine.parser.Parser;
 import com.pri1712.searchengine.indexreader.IndexReader;
 import com.pri1712.searchengine.wikiquerying.QueryEngine;
@@ -34,6 +36,7 @@ public class Main {
 
     private static int CHUNK_SIZE = 512; //in tokens, 1 word = ~0.75 token
     private static int CHUNK_OVERLAP = 55;
+
     private static double TERM_FREQUENCY_SATURATION = 1.5;
     private static double DOCUMENT_LENGTH_NORMALIZATION = 0.75;
 
@@ -92,7 +95,8 @@ public class Main {
         }
 
         try {
-            Chunker chunker = new Chunker(CHUNK_SIZE, CHUNK_OVERLAP, parsedFilePath, chunkedFilePath, chunkDataFilePath, chunkIndexFilePath,indexedFilePath, docStatsPath );
+            initParams();
+            Chunker chunker = new Chunker(parsedFilePath, chunkedFilePath, chunkDataFilePath, chunkIndexFilePath,indexedFilePath, docStatsPath );
             chunker.startChunking();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -160,6 +164,11 @@ public class Main {
         return new IndexReader(indexedPath.toString(),tokenIndexOffsetPath);
     }
 
+    private static void initParams() {
+        new ChunkParams(CHUNK_SIZE, CHUNK_OVERLAP);
+        new RankingParams(TERM_FREQUENCY_SATURATION,DOCUMENT_LENGTH_NORMALIZATION);
+        new QueryParams()
+    }
     private static long getStartTime() {
         return System.nanoTime();
     }
