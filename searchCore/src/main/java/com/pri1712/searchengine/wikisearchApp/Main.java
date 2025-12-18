@@ -22,8 +22,8 @@ public class Main {
     private static final String DOC_STATS_PATH = "data/doc-stats/stats.json";
     private static final String CHUNKED_FILE_PATH = "data/chunked-data/";
 
-    private static final int TOP_K = 1;
-    private static final int RECORD_SIZE = 16;
+    private static final int TOP_K = 20;
+    private static final int RECORD_SIZE = 20;
     private static final String TEST_TOKEN = "aaaaamaaj";
     static String parsedFilePath = PARSED_FILE_PATH;
     static String tokenizedFilePath = TOKENIZED_FILE_PATH;
@@ -139,7 +139,8 @@ public class Main {
                 }
                 try {
                     QueryEngine queryEngine = new QueryEngine(indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath, RECORD_SIZE, TERM_FREQUENCY_SATURATION, DOCUMENT_LENGTH_NORMALIZATION);
-                    queryEngine.start(line);
+                    List<String> relevantChunks = queryEngine.start(line);
+                    LOGGER.info("relevant chunks: " + relevantChunks);
 
                 } catch (IOException e) {
                     LOGGER.log(Level.WARNING, "Query failed", e);
