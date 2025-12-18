@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 import com.pri1712.searchengine.indexwriter.IndexWriter;
 import com.pri1712.searchengine.model.BM25Stats;
-import com.pri1712.searchengine.model.ChunkConfiguration;
 import com.pri1712.searchengine.model.TokenizedChunk;
 import com.pri1712.searchengine.model.data.Chunk;
+import com.pri1712.searchengine.model.params.ChunkParams;
 import com.pri1712.searchengine.utils.WikiDocument;
 import com.pri1712.searchengine.tokenizer.Tokenizer;
 
@@ -44,9 +44,10 @@ public class ChunkerEngine {
     Tokenizer tokenizer = new Tokenizer();
     IndexWriter indexWriter;
 
-    public ChunkerEngine(ChunkConfiguration chunkConfiguration, RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile, String indexedFilePath, String docStatsPath) throws IOException {
-        this.chunkSize = chunkConfiguration.getChunkSize();
-        this.chunkOverlap = chunkConfiguration.getChunkOverlap();
+    public ChunkerEngine(RandomAccessFile chunkDataFile, RandomAccessFile chunkIndexFile, String indexedFilePath, String docStatsPath) throws IOException {
+        this.chunkSize = ChunkParams.getChunkSize();
+        this.chunkOverlap = ChunkParams.getChunkOverlap();
+        this.minChunkLength =
         this.chunkDataFile = chunkDataFile;
         this.chunkIndexFile = chunkIndexFile;
         this.indexFilePath = indexedFilePath;
@@ -119,7 +120,7 @@ public class ChunkerEngine {
 
     private boolean validateText(String text) {
         if (text == null || text.isBlank()) return false;
-        if (text.length() <= MIN_)
+        if (text.length() <= ChunkParams.getMinChunkLength())
     }
 
     public void finish() throws IOException {

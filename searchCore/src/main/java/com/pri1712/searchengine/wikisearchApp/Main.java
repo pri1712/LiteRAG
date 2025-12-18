@@ -37,6 +37,7 @@ public class Main {
 
     private static int CHUNK_SIZE = 512; //in tokens, 1 word = ~0.75 token
     private static int CHUNK_OVERLAP = 55;
+    private static int MIN_CHUNK_LENGTH = 20;
 
     private static double TERM_FREQUENCY_SATURATION = 1.5;
     private static double DOCUMENT_LENGTH_NORMALIZATION = 0.75;
@@ -166,7 +167,7 @@ public class Main {
     }
 
     private static void initParams() {
-        new ChunkParams(CHUNK_SIZE, CHUNK_OVERLAP);
+        new ChunkParams(CHUNK_SIZE, CHUNK_OVERLAP, MIN_CHUNK_LENGTH);
         new RankingParams(TERM_FREQUENCY_SATURATION,DOCUMENT_LENGTH_NORMALIZATION);
         new QueryParams(TOP_K,RECORD_SIZE);
     }
