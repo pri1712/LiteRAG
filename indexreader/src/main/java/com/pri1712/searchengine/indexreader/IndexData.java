@@ -3,21 +3,21 @@ package com.pri1712.searchengine.indexreader;
 import java.util.List;
 
 public class IndexData {
-    private List<Integer> docIds;
+    private List<Integer> chunkIds;
     private List<Integer> freqs;
     private String token;
     public IndexData(List<Integer> docIds, List<Integer> freqs,String token) {
-        this.docIds = docIds;
+        this.chunkIds = docIds;
         this.freqs = freqs;
         this.token = token;
     }
 
     public List<Integer> getIds() {
-        return docIds;
+        return chunkIds;
     }
 
-    public void setDocIds(List<Integer> docIds) {
-        this.docIds = docIds;
+    public void setChunkIds(List<Integer> chunkIds) {
+        this.chunkIds = chunkIds;
     }
 
     public List<Integer> getFreqs() {

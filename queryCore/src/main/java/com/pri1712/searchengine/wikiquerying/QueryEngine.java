@@ -124,7 +124,7 @@ public class QueryEngine {
     }
 
     /**
-     * Reads metadata for a set of IDs in one go to minimize disk head movement logic.
+     * Reads metadata for a set of chunk IDs in one go to minimize disk head movement logic.
      */
     private Map<Integer, ChunkMetaData> fetchMetadataMap(Set<Integer> chunkIds) throws IOException {
         Map<Integer, ChunkMetaData> map = new HashMap<>();
@@ -179,7 +179,9 @@ public class QueryEngine {
         }
         List<ChunkMetaData> result = new ArrayList<>();
         while (!pq.isEmpty()) {
-            result.add(0, pq.poll().getChunkMetaData());
+            ScoredChunk polledElement = pq.poll();
+            LOGGER.info("Score is " + polledElement.getScore());
+            result.add(0, polledElement.getChunkMetaData());
         }
         return result;
     }
