@@ -2,7 +2,6 @@ package com.pri1712.searchengine.wikiquerying;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pri1712.searchengine.indexreader.IndexData;
 import com.pri1712.searchengine.indexreader.IndexReader;
