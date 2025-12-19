@@ -72,4 +72,7 @@ public class ParsedDocument {
     public void setMetadata(Map<String, String> metadata) {
         this.metadata = metadata;
     }
+    public void addMetadata(String key, String value) {
+        this.metadata.put(key,value);
+    }
 }
