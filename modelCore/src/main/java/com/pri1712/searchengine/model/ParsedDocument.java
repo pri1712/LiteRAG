@@ -1,5 +1,6 @@
 package com.pri1712.searchengine.model;
 
+import java.util.Map;
 import java.util.logging.*;
 
 public class ParsedDocument {
@@ -9,7 +10,7 @@ public class ParsedDocument {
     private String title;
     private String text;
     private String timestamp;
-
+    private Map<String,String> metadata;
     public ParsedDocument() {}
     public ParsedDocument(String id, String title, String text, String timestamp) {
         this.id = id;
@@ -25,11 +26,12 @@ public class ParsedDocument {
 //        ));
     }
 
-    public ParsedDocument(String id, String title, String text){
+    public ParsedDocument(String id, String title, String text,Map<String,String> metadata) {
         this.id = id;
         this.title = title;
         this.text = text;
         this.timestamp = null;
+        this.metadata = metadata;
     }
 
     public String getTimestamp() {
