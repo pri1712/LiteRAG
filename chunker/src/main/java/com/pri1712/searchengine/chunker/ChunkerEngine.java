@@ -67,15 +67,15 @@ public class ChunkerEngine {
 
             List<WikiDocument> jsonDocuments = mapper.readValue(buffRead, new TypeReference<>() {
             });
-            int docCount = 0;
+//            int docCount = 0;
             for(WikiDocument wikiDocument : jsonDocuments) {
                 //do this per document in a document batch, each document batch is one of the parsed json files.
-                docCount++;
+//                docCount++;
                 String fullText = wikiDocument.getTitle() + " " + wikiDocument.getText();
-                LOGGER.log(Level.INFO, "Full text: {0}", fullText);
+
                 chunkText(fullText, wikiDocument.getId());
             }
-            LOGGER.log(Level.INFO, "Processed " + docCount + " documents");
+//            LOGGER.log(Level.INFO, "Processed " + docCount + " documents");
         }
     }
 
@@ -105,6 +105,7 @@ public class ChunkerEngine {
                 long dataFilePointer = chunkDataFile.getFilePointer();
                 chunkDataFile.write(chunkBytes);
 
+                chunkIndexFile.writeInt(chunkId);
                 chunkIndexFile.writeLong(dataFilePointer);
                 chunkIndexFile.writeInt((int) chunkBytesLength);
                 chunkIndexFile.writeInt((int) Integer.parseInt(docId));
