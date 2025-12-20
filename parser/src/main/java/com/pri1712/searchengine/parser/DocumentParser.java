@@ -6,6 +6,6 @@ import java.io.IOException;
 import java.util.List;
 
 public interface DocumentParser {
-    List<ParsedDocument> parse() throws IOException;
+    void parse() throws IOException;
     String getParserName();
 }

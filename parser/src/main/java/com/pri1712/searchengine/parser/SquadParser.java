@@ -15,76 +15,75 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /***
  * Class for parsing squad json format.
  */
 public class SquadParser implements DocumentParser {
-    private static Logger LOGGER = Logger.getLogger(SquadParser.class.getName());
-    private String dataFilePath;
+    private static final Logger LOGGER = Logger.getLogger(SquadParser.class.getName());
+
+    private final String dataFilePath;
     private final String outputDir;
     private final String parserBatchCheckpointFile = "parserCheckpoint.txt";
-    private final CheckpointManager checkpointManager = new CheckpointManager(parserBatchCheckpointFile);
+    private final boolean enableCheckpoint;
+
     private int MAX_DOCS_TO_PROCESS;
     private int MAX_BATCH_SIZE;
     ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
             .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
-    private boolean enableCheckpoint;
 
-    public SquadParser(String dataFilePath,boolean enableCheckpoint,String outputDir) {
+    public SquadParser(String dataFilePath, boolean enableCheckpoint, String outputDir) {
         this.dataFilePath = dataFilePath;
         this.enableCheckpoint = enableCheckpoint;
-        this.outputDir  = outputDir;
+        this.outputDir = outputDir;
+
         this.MAX_DOCS_TO_PROCESS = ParsingParams.getMaxDocsToProcess();
+        LOGGER.info("Max docs to process: " + MAX_DOCS_TO_PROCESS);
+
         this.MAX_BATCH_SIZE = ParsingParams.getMaxBatchSize();
+        LOGGER.info("Max batch size: " + MAX_BATCH_SIZE);
     }
 
     @Override
-    public List<ParsedDocument> parse() throws IOException {
+    public void parse() throws IOException {
         List<ParsedDocument> writeBuffer = new ArrayList<>();
-        List<ParsedDocument> allDocuments = new ArrayList<>();
 
         if (dataFilePath == null || dataFilePath.isEmpty()) {
-            throw new FileNotFoundException();
+            throw new FileNotFoundException("Data file path is null or empty");
         }
-
-        BatchFileWriter batchWriter = null;
+        BatchFileWriter batchWriter = new BatchFileWriter(outputDir);
         CheckpointManager checkpointManager = null;
-        int parseBatchCounter = 0;
         int previousParseBatchCounter = -1;
+        int parseBatchCounter = 0;
 
         if (enableCheckpoint) {
-            batchWriter = new BatchFileWriter(outputDir);
             checkpointManager = new CheckpointManager(parserBatchCheckpointFile);
             previousParseBatchCounter = checkpointManager.readCheckpointBatch();
+            LOGGER.info("Resuming from previous parse batch count: " + previousParseBatchCounter);
         }
 
         try (Reader reader = new FileReader(dataFilePath)) {
             JsonNode root = mapper.readTree(reader);
             JsonNode data = root.get("data");
             int docCounter = 0;
-
             for (JsonNode article : data) {
                 String title = article.get("title").asText();
                 JsonNode paragraphs = article.get("paragraphs");
-
                 for (JsonNode para : paragraphs) {
-                    if (MAX_DOCS_TO_PROCESS >= 0 && docCounter >= MAX_DOCS_TO_PROCESS) {
-                        flushRemaining(writeBuffer, batchWriter, checkpointManager,
-                                previousParseBatchCounter, parseBatchCounter);
-                        return allDocuments;
+                    if (MAX_DOCS_TO_PROCESS > 0 && docCounter >= MAX_DOCS_TO_PROCESS) {
+                        LOGGER.info("Reached max docs limit: " + MAX_DOCS_TO_PROCESS);
+                        processBatch(writeBuffer, batchWriter, checkpointManager, previousParseBatchCounter, parseBatchCounter);
+                        return;
                     }
 
                     String context = para.get("context").asText();
-
-                    StringBuilder cleanTitle = TextUtils.lowerCaseText(new StringBuilder(title));
-                    StringBuilder cleanContext = TextUtils.lowerCaseText(new StringBuilder(context));
-
-                    if (cleanContext.isEmpty()) {
+                    if (context == null || context.isEmpty()) {
+                        LOGGER.warning("Skipping empty context");
                         continue;
                     }
+                    StringBuilder cleanTitle = TextUtils.lowerCaseText(new StringBuilder(title));
+                    StringBuilder cleanContext = TextUtils.lowerCaseText(new StringBuilder(context));
 
                     ParsedDocument doc = new ParsedDocument(
                             String.valueOf(docCounter),
@@ -93,50 +92,45 @@ public class SquadParser implements DocumentParser {
                     );
                     doc.addMetadata("source", "squad");
                     doc.addMetadata("article_title", cleanTitle.toString());
+                    writeBuffer.add(doc);
 
-                    if (enableCheckpoint) {
-                        writeBuffer.add(doc);
-
-                        if (writeBuffer.size() >= MAX_BATCH_SIZE) {
-                            List<ParsedDocument> batchToWrite =
-                                    new ArrayList<>(writeBuffer);
-                            writeBuffer.clear();
-
-                            if (previousParseBatchCounter == -1
-                                    || parseBatchCounter > previousParseBatchCounter) {
-                                batchWriter.writeBatch(batchToWrite, parseBatchCounter);
-                            }
-
-                            checkpointManager.writeCheckpointBatch(parseBatchCounter);
-                            parseBatchCounter++;
-                        }
-                    } else {
-                        allDocuments.add(doc);
+                    if (writeBuffer.size() >= MAX_BATCH_SIZE) {
+                        processBatch(writeBuffer, batchWriter, checkpointManager, previousParseBatchCounter, parseBatchCounter);
+                        parseBatchCounter++;
+                        writeBuffer.clear();
                     }
-                    LOGGER.info(docCounter + " documents parsed");
                     docCounter++;
                 }
             }
         }
-        flushRemaining(writeBuffer, batchWriter, checkpointManager,
-                previousParseBatchCounter, parseBatchCounter);
-        return allDocuments;
+
+        processBatch(writeBuffer, batchWriter, checkpointManager, previousParseBatchCounter, parseBatchCounter);
+    }
+
+    /**
+     * Unified logic to write batches. Handles both checkpointed and non-checkpointed runs.
+     */
+    private void processBatch(List<ParsedDocument> buffer,
+                              BatchFileWriter batchWriter,
+                              CheckpointManager checkpointManager,
+                              int previousParseBatchCounter,
+                              int currentParseBatchCounter) throws IOException {
+
+        if (buffer.isEmpty()) return;
+        boolean shouldWrite = !enableCheckpoint || (previousParseBatchCounter == -1 || currentParseBatchCounter > previousParseBatchCounter);
+
+        if (shouldWrite) {
+            batchWriter.writeBatch(new ArrayList<>(buffer), currentParseBatchCounter);
+            if (enableCheckpoint && checkpointManager != null) {
+                checkpointManager.writeCheckpointBatch(currentParseBatchCounter);
+            }
+        } else {
+            LOGGER.fine("Skipping batch " + currentParseBatchCounter + " as it was already processed.");
+        }
     }
 
     @Override
     public String getParserName() {
         return "SQuAD JSON Parser";
-    }
-
-    private void flushRemaining(List<ParsedDocument> writeBuffer, BatchFileWriter batchWriter, CheckpointManager checkpointManager, int previousParseBatchCounter, int parseBatchCounter) throws IOException {
-        if (writeBuffer.isEmpty() || batchWriter == null || checkpointManager == null) {
-            return;
-        }
-        if (previousParseBatchCounter == -1
-                || parseBatchCounter > previousParseBatchCounter) {
-            batchWriter.writeBatch(new ArrayList<>(writeBuffer), parseBatchCounter);
-        }
-        checkpointManager.writeCheckpointBatch(parseBatchCounter);
-        writeBuffer.clear();
     }
 }

@@ -97,6 +97,7 @@ public class Main {
     }
 
     private static void runWritePipeline(String dataPath) {
+        initParams();
         try {
             DocumentParser documentParser = ParserFactory.createParser(dataPath,MAX_DOCS_TO_PROCESS,true,parsedFilePath);
             LOGGER.log(Level.INFO,"Parsing data : {0}",parsedFilePath);
@@ -106,7 +107,6 @@ public class Main {
         }
 
         try {
-            initParams();
             Chunker chunker = new Chunker(parsedFilePath, chunkedFilePath, chunkDataFilePath, chunkIndexFilePath,indexedFilePath, docStatsPath );
             chunker.startChunking();
         } catch (IOException e) {
