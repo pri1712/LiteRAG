@@ -1,19 +1,17 @@
-package com.pri1712.searchengine.model;
+package com.pri1712.searchengine.utils;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.*;
 
-public class ParsedDocument {
-    private static final Logger LOGGER = Logger.getLogger(ParsedDocument.class.getName());
+public class WikiDocument {
+    private static final Logger LOGGER = Logger.getLogger(WikiDocument.class.getName());
 
     private String id;
     private String title;
     private String text;
     private String timestamp;
-    private Map<String,String> metadata;
-    public ParsedDocument() {}
-    public ParsedDocument(String id, String title, String text, String timestamp) {
+
+    public WikiDocument() {}
+    public WikiDocument(String id, String title, String text, String timestamp) {
         this.id = id;
         this.title = title;
         this.text = text;
@@ -25,14 +23,6 @@ public class ParsedDocument {
 //                text.length(),
 //                timestamp
 //        ));
-    }
-
-    public ParsedDocument(String id, String title, String text) {
-        this.id = id;
-        this.title = title;
-        this.text = text;
-        this.timestamp = null;
-        this.metadata = new HashMap<>();
     }
 
     public String getTimestamp() {
@@ -65,15 +55,5 @@ public class ParsedDocument {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public Map<String, String> getMetadata() {
-        return metadata;
-    }
-    public void setMetadata(Map<String, String> metadata) {
-        this.metadata = metadata;
-    }
-    public void addMetadata(String key, String value) {
-        this.metadata.put(key,value);
     }
 }
