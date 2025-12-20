@@ -52,6 +52,7 @@ public class Chunker {
         try (Stream<Path> fileStream = Files.list(parsedPath).filter(f -> f.toString().endsWith(".json.gz"))) {
             fileStream.forEach(parsedFile -> {
                 try {
+                    LOGGER.log(Level.INFO, "Processing file: " + parsedFile.getFileName().toString());
                     chunkerEngine.processFile(parsedFile);
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Error processing file " + parsedFile.toString(), e);
