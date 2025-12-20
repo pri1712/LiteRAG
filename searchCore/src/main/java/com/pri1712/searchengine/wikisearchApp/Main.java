@@ -3,6 +3,7 @@ package com.pri1712.searchengine.wikisearchApp;
 import com.pri1712.searchengine.chunker.Chunker;
 import com.pri1712.searchengine.indexwriter.IndexWriter;
 import com.pri1712.searchengine.model.params.ChunkParams;
+import com.pri1712.searchengine.model.params.ParsingParams;
 import com.pri1712.searchengine.model.params.QueryParams;
 import com.pri1712.searchengine.model.params.RankingParams;
 import com.pri1712.searchengine.parser.DocumentParser;
@@ -22,7 +23,9 @@ import java.util.logging.Logger;
 public class Main {
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
-    private static int MAX_DOCS_TO_PROCESS = 100;
+    private static int MAX_DOCS_TO_PROCESS = 1000;
+    private static int MAX_BATCH_SIZE = 10;
+
     private static final String PARSED_FILE_PATH = "data/parsed-data/";
     private static final String INDEXED_FILE_PATH = "data/inverted-index/";
     private static final String TOKEN_INDEX_OFFSET_PATH = "data/inverted-index/token_index_offset.json.gz";
@@ -172,6 +175,7 @@ public class Main {
     }
 
     private static void initParams() {
+        new ParsingParams(MAX_DOCS_TO_PROCESS,MAX_BATCH_SIZE);
         new ChunkParams(CHUNK_SIZE, CHUNK_OVERLAP, MIN_CHUNK_LENGTH, ALPHABET_RATIO);
         new RankingParams(TERM_FREQUENCY_SATURATION,DOCUMENT_LENGTH_NORMALIZATION);
         new QueryParams(TOP_K,RECORD_SIZE);

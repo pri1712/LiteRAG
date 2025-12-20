@@ -5,7 +5,7 @@ public class ParserFactory {
         String fileName = filePath.toLowerCase();
 
         if (fileName.contains("squad") && fileName.endsWith(".json")) {
-            return new SquadParser(filePath,maxDocsToProcess,enableCheckpoint,outputDir);
+            return new SquadParser(filePath,enableCheckpoint,outputDir);
         }
 
         throw new IllegalArgumentException("Unknown file format: " + fileName);
