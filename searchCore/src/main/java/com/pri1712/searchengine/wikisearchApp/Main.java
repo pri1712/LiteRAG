@@ -99,6 +99,7 @@ public class Main {
     private static void runWritePipeline(String dataPath) {
         try {
             DocumentParser documentParser = ParserFactory.createParser(dataPath,MAX_DOCS_TO_PROCESS,true,parsedFilePath);
+            LOGGER.log(Level.INFO,"Parsing data : {0}",parsedFilePath);
             documentParser.parse();
         } catch (Exception e) {
             throw new RuntimeException(e);
