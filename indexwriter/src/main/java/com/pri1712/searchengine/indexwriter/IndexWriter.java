@@ -248,7 +248,6 @@ public class IndexWriter {
 
     private void addToIndex(TokenizedChunk tokenizedChunk) throws Exception {
         try {
-            LOGGER.info("tokenize chunk text: " + tokenizedChunk.getTokenizedText());
             addChunk(tokenizedChunk);
             if (shouldFlush()) {
                 LOGGER.fine("Flushing to disk");
