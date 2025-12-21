@@ -25,7 +25,7 @@ Modern RAG systems are resource-hungry and complex, and involve complex set up p
 - Compressed inverted index with delta encoding
 - Streaming parsers (no full documents in RAM)
 
-#### ero External Dependencies
+#### Zero External Dependencies
 - **Just Java 17+** - no Python, no databases, no containers
 - Single JAR distribution (~15MB)
 - No native libraries or GPU requirements
@@ -70,11 +70,9 @@ Beyond vanilla BM25, LiteRAG adds:
 
 ### Performance on SQuAD 2.0 Dataset
 
-**Dataset Details:**
+**Evaluation Dataset Details:**
 - 11,873 test questions
-- 1,204 documents (Wikipedia articles)
-- 8,547 chunks (512 tokens each, 20% overlap)
-- Average query length: 10 words
+- 100k documents ingested
 
 **Detailed Results:**
 
