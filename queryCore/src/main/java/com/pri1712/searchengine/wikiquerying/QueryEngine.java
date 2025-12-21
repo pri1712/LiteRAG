@@ -30,7 +30,7 @@ public class QueryEngine {
     private final String invertedIndex;
     private final String docStats;
     private final String tokenIndexOffset;
-    private final int TOP_K;
+    private int TOP_K;
     private final int RECORD_SIZE;
     private final double TERM_FREQUENCY_SATURATION; // k1
     private final double DOCUMENT_LENGTH_NORMALIZATION; // b
@@ -61,6 +61,9 @@ public class QueryEngine {
                 .orElseThrow(() -> new RuntimeException("No inverted index found in directory: " + invertedIndex));
     }
 
+    public void setTopK(int topK) {
+        this.TOP_K = topK;
+    }
     /**
      * Main entry point for searching.
      * @param query The raw user query string.
@@ -72,7 +75,7 @@ public class QueryEngine {
                 initParams();
             }
             List<String> tokens = preprocessQuery(query);
-            LOGGER.info("tokenized query: " + tokens);
+            LOGGER.finest("tokenized query: " + tokens);
             if (tokens.isEmpty()) return Collections.emptyList();
 
             List<IndexData> queryIndexData = indexReader.readTokenIndex(tokens);
@@ -233,7 +236,7 @@ public class QueryEngine {
         Set<Integer> usedDocIds = new HashSet<>();
 
         for (ScoredChunk chunk : scoredChunkList) {
-            LOGGER.info("Score is " + chunk.getScore() + "for chunkID: " + chunk.getChunkId());
+            LOGGER.finest("Score is " + chunk.getScore() + "for chunkID: " + chunk.getChunkId());
             int docId = chunk.getChunkMetaData().getDocId();
             if (!usedDocIds.contains(docId)) {
                 LOGGER.fine("Score: " + chunk.getScore() + " | DocId: " + docId);

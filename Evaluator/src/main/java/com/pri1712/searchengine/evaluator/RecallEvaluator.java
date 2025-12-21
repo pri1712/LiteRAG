@@ -29,26 +29,22 @@ public class RecallEvaluator {
         System.out.println("Max documents to evaluate: " + MAX_DOCS_EVALUATE);
         System.out.println();
 
-        // Load and cache all questions and answers
         List<QuestionAnswerPair> qaCache = loadQuestionsAndAnswers(squadJsonPath);
         System.out.println("Loaded " + qaCache.size() + " question-answer pairs");
         System.out.println();
 
-        // Store results for comparison
         Map<Integer, EvaluationResults> allResults = new LinkedHashMap<>();
 
-        // Run evaluation for each TOP_K value
         for (int topK : topKValues) {
+            queryEngine.setTopK(topK);
             System.out.println("--- Evaluating with TOP_K = " + topK + " ---");
             EvaluationResults results = evaluateWithTopK(qaCache, topK);
             allResults.put(topK, results);
             System.out.println();
         }
 
-        // Print comparison table
         printComparisonTable(allResults);
 
-        // Save detailed results
         saveDetailedResults(allResults);
     }
 
@@ -85,19 +81,16 @@ public class RecallEvaluator {
                     String question = qa.get("question").asText();
                     String questionId = qa.get("id").asText();
 
-                    // Handle both answerable and unanswerable questions
                     List<String> validAnswers = new ArrayList<>();
                     boolean isImpossible = qa.has("is_impossible") && qa.get("is_impossible").asBoolean();
 
                     if (!isImpossible && qa.has("answers") && !qa.get("answers").isEmpty()) {
                         for (JsonNode ans : qa.get("answers")) {
                             String answerText = ans.get("text").asText().trim();
-                            // Normalize answer text
                             validAnswers.add(normalizeText(answerText));
                         }
                     }
 
-                    // Only include questions that have answers
                     if (!validAnswers.isEmpty()) {
                         qaPairs.add(new QuestionAnswerPair(
                                 questionId,
@@ -127,10 +120,8 @@ public class RecallEvaluator {
 
             int processed = 0;
             for (QuestionAnswerPair qa : qaPairs) {
-                // Get retrieval results
                 List<String> retrievedChunks = queryEngine.start(qa.question);
 
-                // Check if any retrieved chunk contains the answer
                 HitResult hitResult = checkForHit(retrievedChunks, qa.validAnswers, qa.groundTruthContext);
 
                 results.totalQuestions++;
@@ -139,7 +130,6 @@ public class RecallEvaluator {
                     results.successfulHits++;
                     results.hitRanks.add(hitResult.rank);
 
-                    // Track MRR
                     results.reciprocalRanks.add(1.0 / hitResult.rank);
                 } else {
                     results.reciprocalRanks.add(0.0);
@@ -172,30 +162,22 @@ public class RecallEvaluator {
             return new HitResult(false, -1, "NO_RESULTS");
         }
 
-        // Strategy 1: Check if any retrieved chunk contains the answer
         for (int rank = 0; rank < retrievedChunks.size(); rank++) {
             String chunk = normalizeText(retrievedChunks.get(rank));
 
             for (String answer : validAnswers) {
-                // Check for exact substring match
                 if (chunk.contains(answer)) {
                     return new HitResult(true, rank + 1, "ANSWER_FOUND");
                 }
-
-                // IMPROVED: Check for fuzzy match (handles minor differences)
                 if (fuzzyContains(chunk, answer)) {
                     return new HitResult(true, rank + 1, "ANSWER_FOUND_FUZZY");
                 }
             }
         }
 
-        // Strategy 2: Check if we retrieved the correct context
-        // This is important because the answer might be in the chunk but preprocessing removed it
         String normalizedGroundTruth = normalizeText(groundTruthContext);
         for (int rank = 0; rank < retrievedChunks.size(); rank++) {
             String chunk = normalizeText(retrievedChunks.get(rank));
-
-            // Check if there's significant overlap with ground truth context
             if (calculateOverlap(chunk, normalizedGroundTruth) > 0.8) {
                 return new HitResult(true, rank + 1, "CONTEXT_MATCH");
             }
@@ -208,7 +190,6 @@ public class RecallEvaluator {
      * Fuzzy string matching to handle minor differences
      */
     private boolean fuzzyContains(String text, String answer) {
-        // Remove extra whitespace and punctuation for comparison
         String cleanText = text.replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ");
         String cleanAnswer = answer.replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ");
 
@@ -327,7 +308,7 @@ public class RecallEvaluator {
      */
     private static class HitResult {
         boolean isHit;
-        int rank; // 1-indexed rank where answer was found, -1 if not found
+        int rank;
         String status;
 
         HitResult(boolean isHit, int rank, String status) {
@@ -349,7 +330,7 @@ public class RecallEvaluator {
 
         double recall = 0.0;
         double precision = 0.0;
-        double mrr = 0.0; // Mean Reciprocal Rank
+        double mrr = 0.0;
         double averageRank = 0.0;
 
         EvaluationResults(int topK) {
@@ -358,13 +339,10 @@ public class RecallEvaluator {
 
         void calculateMetrics() {
             recall = totalQuestions == 0 ? 0.0 : (double) successfulHits / totalQuestions;
-            precision = recall; // For retrieval tasks, precision@k ≈ recall@k
+            precision = recall;
 
-            // Calculate MRR
             mrr = reciprocalRanks.isEmpty() ? 0.0 :
                     reciprocalRanks.stream().mapToDouble(d -> d).average().orElse(0.0);
-
-            // Calculate average rank (only for hits)
             averageRank = hitRanks.isEmpty() ? 0.0 :
                     hitRanks.stream().mapToInt(i -> i).average().orElse(0.0);
         }
