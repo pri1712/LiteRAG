@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public class Main {
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
-    private static int MAX_DOCS_TO_PROCESS = 100;
+    private static int MAX_DOCS_TO_PROCESS = 1000;
     private static int MAX_BATCH_SIZE = 10;
 
     private static final String PARSED_FILE_PATH = "data/parsed-data/";
@@ -174,8 +174,9 @@ public class Main {
 
     private static void runEvalPipeline(IndexReader indexReader, String dataPath) throws IOException {
         QueryEngine queryEngine = new QueryEngine(indexReader,indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath, RECORD_SIZE);
-        RecallEvaluator evaluator = new RecallEvaluator(queryEngine,TOP_K, MAX_DOCS_EVALUATE );
-        evaluator.runEvaluation(dataPath);
+        RecallEvaluator evaluator = new RecallEvaluator(queryEngine, MAX_DOCS_EVALUATE );
+        int[] topKValues = {1,5,10,15};
+        evaluator.runMultiTopKEvaluation(dataPath, topKValues);
         queryEngine.close();
     }
     private static IndexReader openIndexReader(String indexPath) throws IOException {
