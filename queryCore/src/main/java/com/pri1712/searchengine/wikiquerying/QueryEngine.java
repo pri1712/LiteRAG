@@ -236,7 +236,7 @@ public class QueryEngine {
         Set<Integer> usedDocIds = new HashSet<>();
 
         for (ScoredChunk chunk : scoredChunkList) {
-            LOGGER.finest("Score is " + chunk.getScore() + "for chunkID: " + chunk.getChunkId());
+            LOGGER.finest("Score is " + chunk.getScore() + " for chunkID: " + chunk.getChunkId());
             int docId = chunk.getChunkMetaData().getDocId();
             if (!usedDocIds.contains(docId)) {
                 LOGGER.fine("Score: " + chunk.getScore() + " | DocId: " + docId);
