@@ -52,6 +52,7 @@ public class Main {
     private static String chunkDataFilePath = "data/chunked-data/chunked_data.data";
     private static String chunkIndexFilePath = "data/chunked-data/chunked_index.bin";
 
+    private static int MAX_DOCS_EVALUATE = 100;
     public static void main(String[] args) throws IOException {
         long startTime = getStartTime();
         Map<String,String> parsedArgs = parseArgs(args);
@@ -173,7 +174,7 @@ public class Main {
 
     private static void runEvalPipeline(IndexReader indexReader, String dataPath) throws IOException {
         QueryEngine queryEngine = new QueryEngine(indexReader,indexedFilePath, docStatsPath, tokenIndexOffsetPath, TOP_K, chunkDataFilePath, chunkIndexFilePath, RECORD_SIZE);
-        RecallEvaluator evaluator = new RecallEvaluator(queryEngine,TOP_K);
+        RecallEvaluator evaluator = new RecallEvaluator(queryEngine,TOP_K, MAX_DOCS_EVALUATE );
         evaluator.runEvaluation(dataPath);
         queryEngine.close();
     }
